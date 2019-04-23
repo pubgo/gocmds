@@ -19,9 +19,10 @@ const (
 
 func PrepareBaseCmd(cmd *cobra.Command, envPrefix, defaultHome string) Executor {
 	cobra.OnInitialize(func() { initEnv(envPrefix) })
+
 	cmd.PersistentFlags().StringP(HomeFlag, "", defaultHome, "directory for config and data")
 	cmd.PersistentFlags().Bool(TraceFlag, false, "print out full stack trace on errors.toml")
-	cmd.PersistentFlags().StringP(LogFlag, "ll", "debug", "log level")
+	cmd.PersistentFlags().StringP(LogFlag, "l", "debug", "log level")
 	cmd.PersistentPreRunE = concatCobraCmdFuncs(bindFlagsLoadViper, cmd.PersistentPreRunE)
 	return Executor{Command: cmd, Exit: os.Exit}
 }
@@ -102,15 +103,21 @@ func bindFlagsLoadViper(cmd *cobra.Command, args []string) error {
 
 		viper.Set(HomeFlag, homeDir)
 
-		viper.SetConfigName("config") // name of config file (without extension)
-		viper.AddConfigPath("/etc/kdata/")
+		viper.SetConfigName("config")
+		viper.AddConfigPath("/etc/kdata")
 		viper.AddConfigPath("$HOME/.kdata")
 		viper.AddConfigPath(".")
-
 		viper.AddConfigPath(homeDir)                          // search root directory
 		viper.AddConfigPath(filepath.Join(homeDir, "config")) // search root directory /config
 
-		assert.MustNotError(viper.ReadInConfig())
+		// load config
+		gotry.Try(func() {
+			assert.NotNil(viper.ReadInConfig())
+		}).Catch(func(err error) {
+			if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
+				// ignore not found error, return other errors.toml
+				assert.MustNotError(err)
+			}
+		})
 	}).Error()
-
 }
