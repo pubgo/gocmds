@@ -98,10 +98,9 @@ func bindFlagsLoadViper(cmd *cobra.Command, args []string) error {
 
 		homeDir := viper.GetString(HomeFlag)
 		viper.SetConfigType("yml")
-
 		viper.Set(HomeFlag, homeDir)
-
 		viper.SetConfigName("config")
+
 		viper.AddConfigPath("/etc/kdata")
 		viper.AddConfigPath("$HOME/.kdata")
 		viper.AddConfigPath(".")
@@ -110,18 +109,18 @@ func bindFlagsLoadViper(cmd *cobra.Command, args []string) error {
 
 		//assert.MustNotError(viper.ReadInConfig())
 
-		if err := viper.ReadInConfig(); err != nil {
-			panic(err)
-		}
+		//if err := viper.ReadInConfig(); err != nil {
+		//	panic(err)
+		//}
 
 		// load config
-		//err := gotry.Try(func() {
-		//	assert.MustNotError(viper.ReadInConfig())
-		//}).Error()
-		//if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
-		//	// ignore not found error, return other errors.toml
-		//	assert.MustNotError(err)
-		//}
+		err := gotry.Try(func() {
+			assert.MustNotError(viper.ReadInConfig())
+		}).Error()
+		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
+			// ignore not found error, return other errors.toml
+			assert.MustNotError(err)
+		}
 
 	}).Error()
 }
