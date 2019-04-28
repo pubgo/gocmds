@@ -112,7 +112,7 @@ func bindFlagsLoadViper(cmd *cobra.Command, args []string) error {
 
 		// load config
 		gotry.Try(func() {
-			assert.NotNil(viper.ReadInConfig())
+			assert.MustNotError(viper.ReadInConfig())
 		}).Catch(func(err error) {
 			if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
 				// ignore not found error, return other errors.toml
