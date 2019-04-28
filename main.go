@@ -97,7 +97,7 @@ func bindFlagsLoadViper(cmd *cobra.Command, args []string) error {
 		assert.MustNotError(viper.BindPFlags(cmd.Flags()))
 
 		homeDir := viper.GetString(HomeFlag)
-		viper.SetConfigType("toml")
+		viper.SetConfigType("yml")
 
 		viper.Set(HomeFlag, homeDir)
 
