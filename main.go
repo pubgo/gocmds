@@ -70,9 +70,7 @@ func (e Executor) Execute() error {
 	e.SilenceUsage = true
 	e.SilenceErrors = true
 
-	return gotry.Try(func() {
-		assert.MustNotError(e.Command.Execute())
-	}).Error()
+	return e.Command.Execute()
 }
 
 type cobraCmdFunc func(cmd *cobra.Command, args []string) error
