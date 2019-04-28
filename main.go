@@ -108,14 +108,20 @@ func bindFlagsLoadViper(cmd *cobra.Command, args []string) error {
 		viper.AddConfigPath(homeDir)                          // search root directory
 		viper.AddConfigPath(filepath.Join(homeDir, "config")) // search root directory /config
 
-		// load config
-		err := gotry.Try(func() {
-			assert.MustNotError(viper.ReadInConfig())
-		}).Error()
-		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
-			// ignore not found error, return other errors.toml
-			assert.MustNotError(err)
+		//assert.MustNotError(viper.ReadInConfig())
+
+		if err := viper.ReadInConfig(); err != nil {
+			panic(err)
 		}
+
+		// load config
+		//err := gotry.Try(func() {
+		//	assert.MustNotError(viper.ReadInConfig())
+		//}).Error()
+		//if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
+		//	// ignore not found error, return other errors.toml
+		//	assert.MustNotError(err)
+		//}
 
 	}).Error()
 }
