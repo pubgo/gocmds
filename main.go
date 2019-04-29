@@ -1,6 +1,7 @@
 package gocmds
 
 import (
+	"fmt"
 	"github.com/pubgo/assert"
 	"github.com/pubgo/gotry"
 	"os"
@@ -69,7 +70,6 @@ type ExitCoder interface {
 func (e Executor) Execute() error {
 	e.SilenceUsage = true
 	e.SilenceErrors = true
-
 	return e.Command.Execute()
 }
 
@@ -81,9 +81,7 @@ func concatCobraCmdFuncs(fs ...cobraCmdFunc) cobraCmdFunc {
 	return func(cmd *cobra.Command, args []string) error {
 		for _, f := range fs {
 			if f != nil {
-				if err := f(cmd, args); err != nil {
-					return err
-				}
+				assert.MustNotError(f(cmd, args))
 			}
 		}
 		return nil
@@ -96,10 +94,14 @@ func bindFlagsLoadViper(cmd *cobra.Command, args []string) error {
 		// cmd.Flags() includes flags from this command and all persistent flags from the parent
 		assert.MustNotError(viper.BindPFlags(cmd.Flags()))
 
+		env := os.Getenv("env")
+		env = assert.If(env == "", Env.Dev, env).(string)
+		assert.IfNotIn(env, Env.Dev, Env.Stag, Env.Prod, "env error(%s)", env)
+
 		homeDir := viper.GetString(HomeFlag)
 		viper.SetConfigType("yml")
 		viper.Set(HomeFlag, homeDir)
-		viper.SetConfigName("config")
+		viper.SetConfigName(fmt.Sprintf("config.%s", env))
 
 		viper.AddConfigPath("/etc/kdata")
 		viper.AddConfigPath("$HOME/.kdata")
@@ -107,20 +109,7 @@ func bindFlagsLoadViper(cmd *cobra.Command, args []string) error {
 		viper.AddConfigPath(homeDir)                          // search root directory
 		viper.AddConfigPath(filepath.Join(homeDir, "config")) // search root directory /config
 
-		//assert.MustNotError(viper.ReadInConfig())
-
-		//if err := viper.ReadInConfig(); err != nil {
-		//	panic(err)
-		//}
-
 		// load config
-		err := gotry.Try(func() {
-			assert.MustNotError(viper.ReadInConfig())
-		}).Error()
-		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
-			// ignore not found error, return other errors.toml
-			assert.MustNotError(err)
-		}
-
+		assert.MustNotError(viper.ReadInConfig())
 	}).Error()
 }
